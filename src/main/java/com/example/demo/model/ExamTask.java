@@ -1,9 +1,15 @@
 package com.example.demo.model;
 
-public record ExamTask(
-        Long id,
-        Long examId,
-        String condition,
-        String referenceAnswer,
-        Integer maxScore
-) {}
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "exam_tasks")
+public class ExamTask {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    public Long examId;
+    public String condition;
+    public String referenceAnswer;
+    public Integer maxScore;
+}

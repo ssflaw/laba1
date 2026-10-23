@@ -43,4 +43,14 @@ public class ExamController {
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }
+
+    @PostMapping("/{id}/publish")
+    public Exam publish(@PathVariable Long id) {
+        return service.publish(id);
+    }
+
+    @PostMapping("/{id}/archive")
+    public Exam archive(@PathVariable Long id) {
+        return service.archive(id);
+    }
 }

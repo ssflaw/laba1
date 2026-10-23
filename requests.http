@@ -1,0 +1,166 @@
+@host = http://localhost:8080
+
+### 1. Пользователи: создать
+POST {{host}}/api/users
+Content-Type: application/json
+
+{"username": "dave", "email": "dave@example.com"}
+
+> {% client.global.set("userId", response.body.id); %}
+
+### 2. Пользователи: список
+GET {{host}}/api/users
+
+### 3. Пользователи: по id
+GET {{host}}/api/users/{{userId}}
+
+### 4. Пользователи: изменить
+PATCH {{host}}/api/users/{{userId}}
+Content-Type: application/json
+
+{"email": "dave@new.example.com"}
+
+### 5. Экзамен: создать (статус DRAFT)
+POST {{host}}/api/exams
+Content-Type: application/json
+
+{"title": "Spring Basics", "passingScore": 3, "timeLimitMinutes": 30}
+
+> {% client.global.set("examId", response.body.id); %}
+
+### 6. Экзамен: изменить
+PATCH {{host}}/api/exams/{{examId}}
+Content-Type: application/json
+
+{"timeLimitMinutes": 45}
+
+### 7. Экзамен: список
+GET {{host}}/api/exams
+
+### 8. ОШИБКА 400: опубликовать экзамен без заданий
+POST {{host}}/api/exams/{{examId}}/publish
+
+### 9. Задание 1: создать
+POST {{host}}/api/exam-tasks
+Content-Type: application/json
+
+{"examId": {{examId}}, "condition": "Аннотация для REST-контроллера?", "referenceAnswer": "@RestController", "maxScore": 2}
+
+> {% client.global.set("task1", response.body.id); %}
+
+### 10. Задание 2: создать
+POST {{host}}/api/exam-tasks
+Content-Type: application/json
+
+{"examId": {{examId}}, "condition": "HTTP-метод для частичного обновления?", "referenceAnswer": "PATCH", "maxScore": 2}
+
+> {% client.global.set("task2", response.body.id); %}
+
+### 11. Задание: изменить
+PATCH {{host}}/api/exam-tasks/{{task2}}
+Content-Type: application/json
+
+{"maxScore": 3}
+
+### 12. Задания: список
+GET {{host}}/api/exam-tasks
+
+### 13. ОШИБКА 400: начать попытку по неопубликованному экзамену
+POST {{host}}/api/exam-attempts
+Content-Type: application/json
+
+{"examId": {{examId}}, "studentId": {{userId}}}
+
+### 14. БИЗНЕС: опубликовать экзамен
+POST {{host}}/api/exams/{{examId}}/publish
+
+### 15. ОШИБКА 400: менять задания опубликованного экзамена нельзя
+PATCH {{host}}/api/exam-tasks/{{task1}}
+Content-Type: application/json
+
+{"maxScore": 10}
+
+### 16. БИЗНЕС: начать попытку
+POST {{host}}/api/exam-attempts
+Content-Type: application/json
+
+{"examId": {{examId}}, "studentId": {{userId}}}
+
+> {% client.global.set("attemptId", response.body.id); %}
+
+### 17. ОШИБКА 400: вторая активная попытка того же студента
+POST {{host}}/api/exam-attempts
+Content-Type: application/json
+
+{"examId": {{examId}}, "studentId": {{userId}}}
+
+### 18. БИЗНЕС: ответ на задание 1 (верный)
+POST {{host}}/api/exam-attempts/{{attemptId}}/answers
+Content-Type: application/json
+
+{"taskId": {{task1}}, "answer": "@RestController"}
+
+### 19. БИЗНЕС: ответ на задание 2 (неверный)
+POST {{host}}/api/exam-attempts/{{attemptId}}/answers
+Content-Type: application/json
+
+{"taskId": {{task2}}, "answer": "PUT"}
+
+> {% client.global.set("solutionId", response.body.id); %}
+
+### 20. ОШИБКА 400: задание из другого экзамена
+POST {{host}}/api/exam-attempts/{{attemptId}}/answers
+Content-Type: application/json
+
+{"taskId": 1, "answer": "extends"}
+
+### 21. Решения: исправить ответ (баллы пересчитываются)
+PATCH {{host}}/api/task-solutions/{{solutionId}}
+Content-Type: application/json
+
+{"answer": "patch"}
+
+### 22. Решения: список
+GET {{host}}/api/task-solutions
+
+### 23. ОШИБКА 400: архивировать экзамен с активной попыткой
+POST {{host}}/api/exams/{{examId}}/archive
+
+### 24. БИЗНЕС: завершить попытку (итог PASSED, 5 из 5)
+POST {{host}}/api/exam-attempts/{{attemptId}}/finish
+
+### 25. ОШИБКА 400: ответ в завершённой попытке
+POST {{host}}/api/exam-attempts/{{attemptId}}/answers
+Content-Type: application/json
+
+{"taskId": {{task1}}, "answer": "x"}
+
+### 26. ОШИБКА 400: удалить решение завершённой попытки
+DELETE {{host}}/api/task-solutions/{{solutionId}}
+
+### 27. Попытки: по id
+GET {{host}}/api/exam-attempts/{{attemptId}}
+
+### 28. БИЗНЕС: архивировать экзамен
+POST {{host}}/api/exams/{{examId}}/archive
+
+### 29. ОШИБКА 400: начать попытку по архивному экзамену
+POST {{host}}/api/exam-attempts
+Content-Type: application/json
+
+{"examId": {{examId}}, "studentId": 1}
+
+### 30. Попытки: удалить
+DELETE {{host}}/api/exam-attempts/{{attemptId}}
+
+### 31. Экзамен: удалить (задания удаляются каскадно)
+DELETE {{host}}/api/exams/{{examId}}
+
+### 32. Пользователь: удалить
+DELETE {{host}}/api/users/{{userId}}
+
+### 33. ОШИБКА 409: username должен быть уникальным
+POST {{host}}/api/users
+Content-Type: application/json
+
+{"username": "alice"}

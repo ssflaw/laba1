@@ -1,12 +1,14 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.Exam;
-import org.springframework.stereotype.Repository;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 
-@Repository
-public class ExamRepository extends InMemoryRepository<Exam> {
-    @Override
-    protected Exam withId(Exam e, Long id) {
-        return new Exam(id, e.title(), e.passingScore(), e.timeLimitMinutes(), e.status());
-    }
+import java.util.Optional;
+
+public interface ExamRepository extends JpaRepository<Exam, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Exam> findForUpdateById(Long id);
 }

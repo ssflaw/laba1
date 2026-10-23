@@ -1,23 +1,18 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.ExamAttempt;
-import org.springframework.stereotype.Repository;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 
-import java.util.List;
+import java.util.Optional;
 
-@Repository
-public class ExamAttemptRepository extends InMemoryRepository<ExamAttempt> {
-    @Override
-    protected ExamAttempt withId(ExamAttempt a, Long id) {
-        return new ExamAttempt(id, a.examId(), a.studentId(), a.startTime(), a.endTime(),
-                a.totalScore(), a.status());
-    }
+public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, Long> {
 
-    public List<ExamAttempt> findByExamId(Long examId) {
-        return findAll().stream().filter(a -> a.examId().equals(examId)).toList();
-    }
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<ExamAttempt> findForUpdateById(Long id);
 
-    public List<ExamAttempt> findByStudentId(Long studentId) {
-        return findAll().stream().filter(a -> a.studentId().equals(studentId)).toList();
-    }
+    boolean existsByExamIdAndStatus(Long examId, String status);
+
+    boolean existsByExamIdAndStudentIdAndStatus(Long examId, Long studentId, String status);
 }

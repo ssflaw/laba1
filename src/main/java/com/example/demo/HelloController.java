@@ -8,13 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class HelloController {
 
-    // Первый GET-эндпоинт (возвращает текст)
     @GetMapping("/text")
     public String getText() {
         return "Привет! Это текстовый ответ.";
     }
 
-    // Второй GET-эндпоинт (возвращает число)
     @GetMapping("/number")
     public int getNumber() {
         return 42;

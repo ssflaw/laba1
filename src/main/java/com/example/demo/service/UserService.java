@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.util.Check;
@@ -13,11 +12,9 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository repository;
-    private final ExamAttemptService attemptService;
 
-    public UserService(UserRepository repository, ExamAttemptService attemptService) {
+    public UserService(UserRepository repository) {
         this.repository = repository;
-        this.attemptService = attemptService;
     }
 
     public List<User> getAll() {
@@ -25,27 +22,24 @@ public class UserService {
     }
 
     public User getById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User " + id + " not found"));
+        return Check.found(repository.findById(id), "User " + id);
     }
 
     public User create(User in) {
-        Check.require(Check.notBlank(in.username()), "username is required");
-        return repository.create(new User(null, in.username(), in.email()));
+        in.id = null;
+        Check.require(Check.notBlank(in.username), "username is required");
+        return repository.save(in);
     }
 
     public User update(Long id, User patch) {
-        User old = getById(id);
-        User merged = new User(id,
-                Patch.of(patch.username(), old.username()),
-                Patch.of(patch.email(), old.email()));
-        Check.require(Check.notBlank(merged.username()), "username must not be blank");
-        return repository.update(id, merged);
+        User user = getById(id);
+        user.username = Patch.of(patch.username, user.username);
+        user.email = Patch.of(patch.email, user.email);
+        Check.require(Check.notBlank(user.username), "username must not be blank");
+        return repository.save(user);
     }
 
     public void delete(Long id) {
-        getById(id);
-        attemptService.deleteByStudentId(id);   // каскадно: попытки пользователя
-        repository.deleteById(id);
+        repository.delete(getById(id));
     }
 }
