@@ -11,9 +11,22 @@ import java.util.Map;
 @RestControllerAdvice
 public class ErrorHandler {
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Map<String, String>> badRequest(BadRequestException e) {
+        return error(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, String>> notFound(NotFoundException e) {
+        return error(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> conflict() {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("error", "data violates database constraints"));
+        return error(HttpStatus.CONFLICT, "data violates database constraints");
+    }
+
+    private static ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
+        return ResponseEntity.status(status).body(Map.of("error", message));
     }
 }

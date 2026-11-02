@@ -1,7 +1,10 @@
 CREATE TABLE users (
     id       BIGSERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE CHECK (length(trim(username)) > 0),
-    email    VARCHAR(255) UNIQUE
+    email         VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(100) NOT NULL,
+    role          VARCHAR(20) NOT NULL DEFAULT 'STUDENT' CHECK (role IN ('STUDENT', 'TEACHER')),
+    status        VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'BLOCKED'))
 );
 
 CREATE TABLE exams (
